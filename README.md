@@ -1,3 +1,8 @@
+> **Fork of [PDBeurope/arpeggio](https://github.com/PDBeurope/arpeggio) v1.4.4 for the trypanosomatics LIGYSIS stack.**
+> See [trypanosomatics/LIGYSIS](https://github.com/trypanosomatics/LIGYSIS) for installation.
+> Only change against upstream: the `_chem_comp` lookups in `arpeggio/core/interactions.py` are commented out
+> (upstream issue #20: crash on mmCIFs without `_chem_comp.` fields, e.g. PDBe preferred assemblies).
+
 
 # PDBe Arpeggio
 
