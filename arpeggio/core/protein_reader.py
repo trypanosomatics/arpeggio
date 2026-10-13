@@ -100,13 +100,16 @@ def _parse_atom_site_openbabel(cif_block):
         current_res_id = _get_res_id(atom_site, i)
         ins_code = _get_ins_code(atom_site, i)
 
-        if last_chain_id != atom_site["auth_asym_id"][i]:
+        # a new chain always starts a new residue, even when the residue number and name repeat
+        # (e.g. the last ligand of a chain and its symmetry copy in the next chain of an assembly)
+        new_chain = last_chain_id != atom_site["auth_asym_id"][i]
+        if new_chain:
             chain_num += 1
             last_chain_id = atom_site["auth_asym_id"][i]
 
         if (
-            current_res_id != last_res_id
-            or atom_site["auth_asym_id"][i] != last_chain_id
+            new_chain
+            or current_res_id != last_res_id
             or atom_site["label_comp_id"][i] != last_res_name
         ):
 
@@ -342,7 +345,7 @@ def _init_biopython_atom(builder, atom_sites, i):
     except PDB.PDBExceptions.PDBConstructionException:
         builder.init_residue(
             atom_sites["label_comp_id"][i],
-            _get_hetero_flag(atom_sites, i),
+            _get_hetero_flag(atom_sites["group_PDB"][i], atom_sites["label_comp_id"][i]),
             _get_res_id(atom_sites, i),
             _get_ins_code(atom_sites, i),
         )
@@ -390,13 +393,18 @@ def _parse_atom_site_biopython(atom_sites, builder):
                 "    "
             )  # some biopython magic. https://github.com/biopython/biopython/blob/master/Bio/PDB/PDBParser.py#L211
 
-        if last_chain_id != atom_sites["auth_asym_id"][i]:  # init chain
+        # a new chain always starts a new residue, even when the residue number and name repeat
+        # (e.g. the last ligand of a chain and its symmetry copy in the next chain of an assembly).
+        # Otherwise the copy's atoms are added to the previous chain's residue; with alternate
+        # locations BioPython then replaces atoms, and the OpenBabel mapping fails (OBBioMatchError).
+        new_chain = last_chain_id != atom_sites["auth_asym_id"][i]
+        if new_chain:  # init chain
             last_chain_id = atom_sites["auth_asym_id"][i]
             builder.init_chain(last_chain_id)
 
         if (
-            last_res_id != res_id
-            or last_chain_id != atom_sites["auth_asym_id"][i]
+            new_chain
+            or last_res_id != res_id
             or last_res_name != atom_sites["label_comp_id"][i]
             or last_ins_code != ins_code
         ):

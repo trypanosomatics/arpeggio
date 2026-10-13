@@ -1,7 +1,13 @@
 > **Fork of [PDBeurope/arpeggio](https://github.com/PDBeurope/arpeggio) v1.4.4 for the trypanosomatics LIGYSIS stack.**
 > See [trypanosomatics/LIGYSIS](https://github.com/trypanosomatics/LIGYSIS) for installation.
-> Only change against upstream: the `_chem_comp` lookups in `arpeggio/core/interactions.py` are commented out
-> (upstream issue #20: crash on mmCIFs without `_chem_comp.` fields, e.g. PDBe preferred assemblies).
+> Changes against upstream:
+> - the `_chem_comp` lookups in `arpeggio/core/interactions.py` are commented out
+>   (upstream issue #20: crash on mmCIFs without `_chem_comp.` fields, e.g. PDBe preferred assemblies);
+> - the mmCIF readers in `arpeggio/core/protein_reader.py` start a new residue whenever the chain changes.
+>   Before, a chain starting with the same residue number and name as the previous chain's last residue
+>   (common in biological assemblies, e.g. chains `B` and `BA`) was merged into it; with alternate
+>   locations this silently replaced atoms and caused `OBBioMatchError` (cf. upstream issue #26).
+>   Tests: `python -m unittest discover -s arpeggio/tests`.
 
 
 # PDBe Arpeggio
